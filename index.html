@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Axon Chess Master</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Screens will be rendered here -->
+  </div>
+  
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+  
+  <!-- Promotion Modal -->
+  <div id="promotion-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content promotion-content">
+      <h3>Choose Promotion</h3>
+      <div class="promotion-pieces" id="promotion-pieces"></div>
+    </div>
+  </div>
+  
+  <!-- Confirm Modal -->
+  <div id="confirm-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <h3 id="confirm-title">Confirm</h3>
+      <p id="confirm-message"></p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="confirm-cancel">Cancel</button>
+        <button class="btn btn-primary" id="confirm-ok">Confirm</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Game Result Modal -->
+  <div id="result-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content result-content">
+      <div class="result-icon" id="result-icon"></div>
+      <h2 id="result-title">Game Over</h2>
+      <p id="result-message"></p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="App.goHome()">Home</button>
+        <button class="btn btn-primary" onclick="App.reviewGame()">Review</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="chess-engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
