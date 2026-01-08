@@ -123,19 +123,19 @@ const App = (function() {
         
         <div class="config-section">
           <div class="config-label">Play As</div>
-          <div class="config-options">
+          <div class="config-options" data-config="side">
             <button class="config-option ${gameConfig.side === 'w' ? 'selected' : ''}" 
-                    onclick="App.setConfig('side', 'w')">
+                    data-value="w" onclick="App.setConfig('side', 'w')">
               <div class="icon">♔</div>
               <div class="label">White</div>
             </button>
             <button class="config-option ${gameConfig.side === 'b' ? 'selected' : ''}"
-                    onclick="App.setConfig('side', 'b')">
+                    data-value="b" onclick="App.setConfig('side', 'b')">
               <div class="icon">♚</div>
               <div class="label">Black</div>
             </button>
             <button class="config-option ${gameConfig.side === 'random' ? 'selected' : ''}"
-                    onclick="App.setConfig('side', 'random')">
+                    data-value="random" onclick="App.setConfig('side', 'random')">
               <div class="icon">🎲</div>
               <div class="label">Random</div>
             </button>
@@ -144,14 +144,14 @@ const App = (function() {
         
         <div class="config-section">
           <div class="config-label">Opponent</div>
-          <div class="config-options">
+          <div class="config-options" data-config="opponentType">
             <button class="config-option ${gameConfig.opponentType === 'AI' ? 'selected' : ''}"
-                    onclick="App.setConfig('opponentType', 'AI')">
+                    data-value="AI" onclick="App.setConfig('opponentType', 'AI')">
               <div class="icon">🤖</div>
               <div class="label">vs AI</div>
             </button>
             <button class="config-option ${gameConfig.opponentType === 'LOCAL' ? 'selected' : ''}"
-                    onclick="App.setConfig('opponentType', 'LOCAL')">
+                    data-value="LOCAL" onclick="App.setConfig('opponentType', 'LOCAL')">
               <div class="icon">👥</div>
               <div class="label">Local</div>
               <div class="sublabel">Pass & Play</div>
@@ -159,40 +159,38 @@ const App = (function() {
           </div>
         </div>
         
-        ${gameConfig.opponentType === 'AI' ? `
-          <div class="config-section">
-            <div class="config-label">AI Difficulty</div>
-            <div class="difficulty-slider">
-              <div class="difficulty-header">
-                <span>Level</span>
-                <span class="difficulty-value">${gameConfig.aiLevel}</span>
-              </div>
-              <input type="range" min="1" max="8" value="${gameConfig.aiLevel}"
-                     oninput="App.setConfig('aiLevel', parseInt(this.value))">
+        <div class="config-section ai-difficulty-section" style="${gameConfig.opponentType === 'AI' ? '' : 'display: none;'}">
+          <div class="config-label">AI Difficulty</div>
+          <div class="difficulty-slider">
+            <div class="difficulty-header">
+              <span>Level</span>
+              <span class="difficulty-value">${gameConfig.aiLevel}</span>
             </div>
+            <input type="range" min="1" max="8" value="${gameConfig.aiLevel}"
+                   oninput="App.updateAILevel(parseInt(this.value))">
           </div>
-        ` : ''}
+        </div>
         
         <div class="config-section">
           <div class="config-label">Time Control</div>
-          <div class="time-options">
+          <div class="time-options" data-config="timeControl">
             <button class="time-option ${!gameConfig.timeControl ? 'selected' : ''}"
-                    onclick="App.setTimeControl(null)">
+                    data-value="null" onclick="App.setTimeControl(null)">
               <div class="time">∞</div>
               <div class="name">No Limit</div>
             </button>
             <button class="time-option ${gameConfig.timeControl?.initial === 180000 ? 'selected' : ''}"
-                    onclick="App.setTimeControl({initial: 180000, increment: 0})">
+                    data-value="180000" onclick="App.setTimeControl({initial: 180000, increment: 0})">
               <div class="time">3+0</div>
               <div class="name">Blitz</div>
             </button>
             <button class="time-option ${gameConfig.timeControl?.initial === 300000 ? 'selected' : ''}"
-                    onclick="App.setTimeControl({initial: 300000, increment: 0})">
+                    data-value="300000" onclick="App.setTimeControl({initial: 300000, increment: 0})">
               <div class="time">5+0</div>
               <div class="name">Blitz</div>
             </button>
             <button class="time-option ${gameConfig.timeControl?.initial === 600000 ? 'selected' : ''}"
-                    onclick="App.setTimeControl({initial: 600000, increment: 0})">
+                    data-value="600000" onclick="App.setTimeControl({initial: 600000, increment: 0})">
               <div class="time">10+0</div>
               <div class="name">Rapid</div>
             </button>
@@ -202,8 +200,8 @@ const App = (function() {
         <div class="config-section">
           <div class="toggle-row">
             <span>Show Move Hints</span>
-            <div class="toggle ${gameConfig.showHints ? 'active' : ''}"
-                 onclick="App.setConfig('showHints', !gameConfig.showHints)"></div>
+            <div class="toggle ${gameConfig.showHints ? 'active' : ''}" data-config="showHints"
+                 onclick="App.toggleHints()"></div>
           </div>
         </div>
         
@@ -1493,12 +1491,64 @@ const App = (function() {
   
   function setConfig(key, value) {
     gameConfig[key] = value;
-    renderScreen('newGame');
+    
+    // Update DOM in-place instead of re-rendering
+    const container = document.querySelector(`[data-config="${key}"]`);
+    if (container) {
+      // Remove selected from all options in this group
+      container.querySelectorAll('.config-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      // Add selected to the chosen option
+      const selected = container.querySelector(`[data-value="${value}"]`);
+      if (selected) {
+        selected.classList.add('selected');
+      }
+    }
+    
+    // Special case: show/hide AI difficulty section
+    if (key === 'opponentType') {
+      const aiSection = document.querySelector('.ai-difficulty-section');
+      if (aiSection) {
+        aiSection.style.display = value === 'AI' ? '' : 'none';
+      }
+    }
+  }
+  
+  function updateAILevel(value) {
+    gameConfig.aiLevel = value;
+    // Only update the display value, don't re-render the screen
+    const valueDisplay = document.querySelector('.difficulty-value');
+    if (valueDisplay) {
+      valueDisplay.textContent = value;
+    }
+  }
+  
+  function toggleHints() {
+    gameConfig.showHints = !gameConfig.showHints;
+    const toggle = document.querySelector('[data-config="showHints"]');
+    if (toggle) {
+      toggle.classList.toggle('active', gameConfig.showHints);
+    }
   }
   
   function setTimeControl(tc) {
     gameConfig.timeControl = tc;
-    renderScreen('newGame');
+    
+    // Update DOM in-place instead of re-rendering
+    const container = document.querySelector('[data-config="timeControl"]');
+    if (container) {
+      // Remove selected from all time options
+      container.querySelectorAll('.time-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      // Add selected to the chosen option
+      const dataValue = tc ? String(tc.initial) : 'null';
+      const selected = container.querySelector(`[data-value="${dataValue}"]`);
+      if (selected) {
+        selected.classList.add('selected');
+      }
+    }
   }
   
   // Initialize on load
@@ -1512,7 +1562,9 @@ const App = (function() {
     showSaved,
     showSettings,
     setConfig,
+    updateAILevel,
     setTimeControl,
+    toggleHints,
     startGame,
     continueGame,
     undoMove,
